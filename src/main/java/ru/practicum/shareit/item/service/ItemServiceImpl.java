@@ -91,6 +91,7 @@ public class ItemServiceImpl implements ItemService {
                 .map(ItemMapper::toDto)
                 .toList();
     }
+
     private void validateItem(ItemDto itemDto) {
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
             throw new ValidationException("Название вещи не может быть пустым");
