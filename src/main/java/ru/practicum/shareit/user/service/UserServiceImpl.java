@@ -2,7 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dao.UserStorage;
 import ru.practicum.shareit.user.mapping.UserMapper;
@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto create(UserDto userDto) {
-        validateEmailUniqueness(userDto.getEmail());
+        validateEmailUniqueness(null, userDto.getEmail());
 
         User user = UserMapper.toUser(userDto);
 
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
     public UserDto update(Long userId, UserDto userDto) {
         User existingUser = userStorage.getById(userId);
 
-        validateEmailUniqueness(userDto.getEmail());
+        validateEmailUniqueness(userId, userDto.getEmail());
 
         if (userDto.getName() != null) {
             existingUser.setName(userDto.getName());
@@ -65,12 +65,13 @@ public class UserServiceImpl implements UserService {
         userStorage.delete(userId);
     }
 
-    private void validateEmailUniqueness(String email) {
+    private void validateEmailUniqueness(Long currentUserId, String email) {
         boolean emailExists = userStorage.getAll().stream()
+                .filter(user -> currentUserId == null || !currentUserId.equals(user.getId()))
                 .anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
 
         if (emailExists) {
-            throw new ValidationException(
+            throw new DuplicateEmailException(
                     "Пользователь с email " + email + " уже существует"
             );
         }

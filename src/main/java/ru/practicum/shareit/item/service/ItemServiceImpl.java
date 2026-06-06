@@ -13,6 +13,7 @@ import ru.practicum.shareit.user.model.User;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -81,13 +82,13 @@ public class ItemServiceImpl implements ItemService {
             return Collections.emptyList();
         }
 
-        String searchText = text.toLowerCase();
+        String searchText = text.toLowerCase(Locale.ROOT);
 
         return itemStorage.findAll().stream()
-                .filter(Item::getAvailable)
+                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
                 .filter(item ->
-                        item.getName().toLowerCase().contains(searchText)
-                                || item.getDescription().toLowerCase().contains(searchText))
+                        item.getName().toLowerCase(Locale.ROOT).contains(searchText)
+                                || item.getDescription().toLowerCase(Locale.ROOT).contains(searchText))
                 .map(ItemMapper::toDto)
                 .toList();
     }

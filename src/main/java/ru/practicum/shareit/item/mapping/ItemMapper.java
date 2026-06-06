@@ -1,11 +1,11 @@
 package ru.practicum.shareit.item.mapping;
 
-import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
-@NoArgsConstructor
 public class ItemMapper {
+    public ItemMapper() {
+    }
 
     public static ItemDto toDto(Item item) {
         if (item == null) {
