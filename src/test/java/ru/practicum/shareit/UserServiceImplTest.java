@@ -2,6 +2,7 @@ package ru.practicum.shareit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dao.InMemoryUserStorage;
@@ -52,8 +53,8 @@ public class UserServiceImplTest {
 
         userService.create(firstUser);
 
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        DuplicateEmailException exception = assertThrows(
+                DuplicateEmailException.class,
                 () -> userService.create(secondUser)
         );
 
