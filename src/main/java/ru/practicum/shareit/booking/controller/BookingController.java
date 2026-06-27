@@ -26,6 +26,9 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+    /**
+     * Добавление нового запроса на бронирование.
+     */
     @PostMapping
     public BookingDto create(
             @RequestHeader("X-Sharer-User-Id") Long userId,
@@ -34,6 +37,9 @@ public class BookingController {
         return bookingService.create(userId, newBookingDto);
     }
 
+    /**
+     * Подтверждение или отклонение запроса на бронирование
+     */
     @PatchMapping("/{bookingId}")
     public BookingDto approve(
             @RequestHeader("X-Sharer-User-Id") Long userId,
@@ -43,6 +49,9 @@ public class BookingController {
         return bookingService.approve(userId, bookingId, approved);
     }
 
+    /**
+     * Получение данных о конкретном бронировании (включая его статус)
+     */
     @GetMapping("/{bookingId}")
     public BookingDto getById(
             @RequestHeader("X-Sharer-User-Id") Long userId,
@@ -51,6 +60,9 @@ public class BookingController {
         return bookingService.getById(userId, bookingId);
     }
 
+    /**
+     * Получение списка всех бронирований текущего пользователя
+     */
     @GetMapping
     public List<BookingDto> getByBooker(
             @RequestHeader("X-Sharer-User-Id") Long userId,
@@ -59,6 +71,9 @@ public class BookingController {
         return bookingService.getByBooker(userId, parseState(state));
     }
 
+    /**
+     * Получение списка бронирований для всех вещей текущего пользователя
+     */
     @GetMapping("/owner")
     public List<BookingDto> getByOwner(
             @RequestHeader("X-Sharer-User-Id") Long userId,
