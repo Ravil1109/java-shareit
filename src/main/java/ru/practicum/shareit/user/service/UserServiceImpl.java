@@ -2,9 +2,11 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicateEmailException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dao.UserStorage;
 import ru.practicum.shareit.user.mapping.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
@@ -12,26 +14,37 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public UserDto create(UserDto userDto) {
-        validateEmailUniqueness(null, userDto.getEmail());
+        if (userRepository.existsByEmailIgnoreCase(userDto.getEmail())) {
+            throw new DuplicateEmailException(
+                    "Пользователь с email " + userDto.getEmail() + " уже существует"
+            );
+        }
 
         User user = UserMapper.toUser(userDto);
 
-
-        User createdUser = userStorage.create(user);
+        User createdUser = userRepository.save(user);
 
         return UserMapper.toDto(createdUser);
     }
 
     @Override
+    @Transactional
     public UserDto update(Long userId, UserDto userDto) {
-        User existingUser = userStorage.getById(userId);
+        User existingUser = getUserOrThrow(userId);
 
-        validateEmailUniqueness(userId, userDto.getEmail());
+        if (userDto.getEmail() != null && !userDto.getEmail().equalsIgnoreCase(existingUser.getEmail())
+                && userRepository.existsByEmailIgnoreCase(userDto.getEmail())) {
+            throw new DuplicateEmailException(
+                    "Пользователь с email " + userDto.getEmail() + " уже существует"
+            );
+        }
 
         if (userDto.getName() != null) {
             existingUser.setName(userDto.getName());
@@ -41,39 +54,32 @@ public class UserServiceImpl implements UserService {
             existingUser.setEmail(userDto.getEmail());
         }
 
-        User updatedUser = userStorage.update(existingUser);
-
-        return UserMapper.toDto(updatedUser);
+        return UserMapper.toDto(existingUser);
     }
 
     @Override
     public UserDto getById(Long userId) {
-        return UserMapper.toDto(
-                userStorage.getById(userId)
-        );
+        return UserMapper.toDto(getUserOrThrow(userId));
     }
 
     @Override
     public List<UserDto> getAll() {
-        return userStorage.getAll().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional
     public void delete(Long userId) {
-        userStorage.delete(userId);
+        getUserOrThrow(userId);
+        userRepository.deleteById(userId);
     }
 
-    private void validateEmailUniqueness(Long currentUserId, String email) {
-        boolean emailExists = userStorage.getAll().stream()
-                .filter(user -> currentUserId == null || !currentUserId.equals(user.getId()))
-                .anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
-
-        if (emailExists) {
-            throw new DuplicateEmailException(
-                    "Пользователь с email " + email + " уже существует"
-            );
-        }
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Пользователь с id=" + userId + " не найден"
+                ));
     }
 }
